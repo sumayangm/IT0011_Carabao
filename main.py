@@ -1,15 +1,20 @@
+import traceback
 import sys
 from PyQt5.QtWidgets import QApplication
 
 # Import the QIcon class for for modifying application icons
 from PyQt5.QtGui import QIcon
-
 # Import the controller class to use the created windows
 from controller import Controller
 # Import the config file containing the global variables need for the app
 from config import basePath, iconPath
 
 if __name__ == "__main__":
+    def handleException(exc_type, exc_value, exc_tb):
+        traceback.print_exception(exc_type, exc_value, exc_tb)
+
+    sys.excepthook = handleException
+
     app = QApplication(sys.argv)
 
     # Set Icon
@@ -23,5 +28,6 @@ if __name__ == "__main__":
     window.setWindowTitle("Carabao Banking System")
     window.resize(400, 300)
     window.show()
-
+    window.menu.goExit.connect(app.quit)
+    
     sys.exit(app.exec_())

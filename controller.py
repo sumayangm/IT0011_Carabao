@@ -48,3 +48,6 @@ class Controller(QStackedWidget):
         self.menu.goClose.connect(
             lambda: self.setCurrentWidget(self.close)
         )
+        self.register.goMenu.connect(
+            lambda: self.setCurrentWidget(self.menu)
+        )

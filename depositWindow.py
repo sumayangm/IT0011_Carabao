@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QWidget, QLabel, QPushButton, QVBoxLayout, QApplication, QLineEdit, QMessageBox
+from PyQt5.QtWidgets import QWidget, QLabel, QPushButton, QVBoxLayout, QLineEdit, QMessageBox
 from PyQt5.QtCore import Qt, pyqtSignal
 from db import getConnection
 
@@ -7,7 +7,6 @@ class DepositWindow(QWidget):
 
     def __init__(self):
         super().__init__()
-        self.setFixedSize(350, 300)
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
         self.msg = QMessageBox()
@@ -30,10 +29,10 @@ class DepositWindow(QWidget):
         self.accn = QLabel('Enter Account Number: ')
         self.accn.setStyleSheet("font-size: 15px; font-weight: bold")
         self.accn.setAlignment(Qt.AlignCenter)
-        self.layout.addWidget(self.accn)
+        self.layout.addWidget(self.accn, alignment = Qt.AlignCenter)
 
         self.getAccn = QLineEdit()
-        self.getAccn.setStyleSheet("padding: 5px")
+        self.getAccn.setStyleSheet("padding: 5px; border-style: solid; border-width: 1px; border-color: #73737B")
         self.layout.addWidget(self.getAccn)
 
         self.p_btn()
@@ -76,37 +75,34 @@ class DepositWindow(QWidget):
     #SAVINGS ACCOUNT
     def sa(self):
         self.clrL()
-
         self.sacur_bal = self.bal
 
         self.satitle = QLabel("SAVINGS ACCOUNT")
         self.satitle.setStyleSheet("font-size: 20px; font-weight: bold; padding: 10px")
         self.satitle.setAlignment(Qt.AlignCenter)
+        self.layout.addWidget(self.satitle, alignment = Qt.AlignCenter)
 
         self.saCB = QLabel(f'Current Balance:\nPhp {self.sacur_bal:.2f}')
         self.saCB.setStyleSheet("font-size: 15px; font-weight: bold; padding: 10px")
         self.saCB.setAlignment(Qt.AlignCenter)
-
-        self.layout.addWidget(self.satitle)
-        self.layout.addWidget(self.saCB)
+        self.layout.addWidget(self.saCB, alignment = Qt.AlignCenter)
         
         self.sa_enter_bal()
 
     #CURRENT ACCOUNT
     def ca(self):
         self.clrL()
-
         self.cacur_bal = self.bal
 
         self.catitle = QLabel("CURRENT ACCOUNT")
         self.catitle.setStyleSheet("font-size: 20px; font-weight: bold; padding: 10px")
         self.catitle.setAlignment(Qt.AlignCenter)
-        self.layout.addWidget(self.catitle)
+        self.layout.addWidget(self.catitle, alignment = Qt.AlignCenter)
 
         self.caCB = QLabel(f'Current Balance:\nPhp {self.cacur_bal:.2f}')
         self.caCB.setStyleSheet("font-size: 15px; font-weight: bold; padding: 10px")
         self.caCB.setAlignment(Qt.AlignCenter)
-        self.layout.addWidget(self.caCB)
+        self.layout.addWidget(self.caCB, alignment = Qt.AlignCenter)
 
         self.ca_enter_bal()
         
@@ -115,10 +111,10 @@ class DepositWindow(QWidget):
         self.sEB = QLabel('Enter Amount: ')
         self.sEB.setStyleSheet("font-size: 15px")
         self.sEB.setAlignment(Qt.AlignCenter)
-        self.layout.addWidget(self.sEB)
+        self.layout.addWidget(self.sEB, alignment = Qt.AlignCenter)
 
         self.sentBal = QLineEdit()
-        self.sentBal.setStyleSheet("padding: 5px")
+        self.sentBal.setStyleSheet("padding: 5px; border-style: solid; border-width: 1px; border-color: #73737B")
         self.layout.addWidget(self.sentBal)
 
         self.sa_btncal()
@@ -129,10 +125,10 @@ class DepositWindow(QWidget):
         self.cEB = QLabel('Enter Amount: ')
         self.cEB.setStyleSheet("font-size: 15px")
         self.cEB.setAlignment(Qt.AlignCenter)
-        self.layout.addWidget(self.cEB)
+        self.layout.addWidget(self.cEB, alignment = Qt.AlignCenter)
 
         self.centBal = QLineEdit()
-        self.centBal.setStyleSheet("padding: 5px")
+        self.centBal.setStyleSheet("padding: 5px; border-style: solid; border-width: 1px; border-color: #73737B")
         self.layout.addWidget(self.centBal)
 
         self.ca_btncal()
@@ -146,7 +142,6 @@ class DepositWindow(QWidget):
             return amt 
         except ValueError:
             click = self.invalin()
-
             if click == QMessageBox.Cancel:
                 self.sui()
                 self.goMenu.emit()
@@ -163,7 +158,6 @@ class DepositWindow(QWidget):
             return amt
         except ValueError:
             click = self.invalin()
-
             if click == QMessageBox.Cancel:
                 self.sui()
                 self.goMenu.emit()
@@ -205,7 +199,7 @@ class DepositWindow(QWidget):
         self.pbtn.setText("ENTER")
         self.pbtn.setStyleSheet("padding: 5px; font-size: 10px")
         self.pbtn.clicked.connect(self.check_accn)
-        self.layout.addWidget(self.pbtn)
+        self.layout.addWidget(self.pbtn,)
 
     #SA: button for calculation
     def sa_btncal(self):
@@ -292,6 +286,3 @@ class DepositWindow(QWidget):
             self.goMenu.emit()
             self.sui()
     #--END OF POP UP MESSAGES
-
-
-

@@ -1,48 +1,75 @@
-import os
-import json
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel, QLineEdit, QPushButton, QTextEdit, QMessageBox
+from PyQt5.QtWidgets import *
 from PyQt5.QtCore import Qt
+import mysql.connector
+
 
 class AccountInfoWindow(QWidget):
-    def __init__(self):
+
+    def __init__(self, menu_window):
         super().__init__()
+        self.menu_window = menu_window
         self.setWindowTitle("View Account Information")
         self.setGeometry(500, 250, 400, 420)
         layout = QVBoxLayout()
-        title = QLabel("View Account Information")
+        title = QLabel("Account Information")
         title.setAlignment(Qt.AlignCenter)
-        title.setStyleSheet("font-size:18px; font-weight:bold;")
         layout.addWidget(title)
         self.acc_input = QLineEdit()
         self.acc_input.setPlaceholderText("Enter Account Number")
         layout.addWidget(self.acc_input)
-        view_button = QPushButton("View Account")
-        view_button.clicked.connect(self.view_account)
-        layout.addWidget(view_button)
-        self.result_box = QTextEdit()
-        self.result_box.setReadOnly(True)
-        layout.addWidget(self.result_box)
+        view_btn = QPushButton("View Account")
+        view_btn.clicked.connect(self.view_account)
+        layout.addWidget(view_btn)
+        self.result = QTextEdit()
+        self.result.setReadOnly(True)
+        layout.addWidget(self.result)
+        back_btn = QPushButton("Go Back")
+        back_btn.clicked.connect(self.go_back)
+        layout.addWidget(back_btn)
+
         self.setLayout(layout)
 
     def view_account(self):
 
-        acc_no = self.acc_input.text().strip()
-        if acc_no == "":
-            QMessageBox.warning(self, "Error", "Please enter an account number.")
-            return
-        filename = f"{acc_no}.json"
-        if not os.path.exists(filename):
-            QMessageBox.warning(self, "Error", "Account does not exist.")
-            return
-        with open(filename, "r") as file:
-            data = json.load(file)
-        info = f"""
-Full Name: {data['fname']} {data['mname']} {data['lname']}
-Address: {data['address']}
-Birthday: {data['birthday']}
-Gender: {data['gender']}
-Account Type: {data['type']}
-Initial Deposit: {data['initial_deposit']}
-Current Balance: {data['balance']}
+        acc_no = self.acc_input.text()
+
+        try:
+            conn = mysql.connector.connect(
+                host="localhost",
+                user="root",
+                password="",
+                database="carabao_bank"
+            )
+
+            cursor = conn.cursor(dictionary=True)
+
+            cursor.execute(
+                "SELECT * FROM accounts WHERE account_number=%s",
+                (acc_no,)
+            )
+
+            account = cursor.fetchone()
+
+            cursor.close()
+            conn.close()
+
+            if not account:
+                QMessageBox.warning(self, "Error", "Account not found")
+                return
+
+            info = f"""
+Full Name: {account['first_name']} {account['middle_name']} {account['last_name']}
+Address: {account['address']}
+Birthday: {account['birthday']}
+Gender: {account['gender']}
+Account Type: {account['account_type']}
+Current Balance: {account['balance']}
 """
-        self.result_box.setText(info)
+            self.result.setText(info)
+
+        except Exception as e:
+            QMessageBox.critical(self, "Database Error", str(e))
+
+    def go_back(self):
+        self.menu_window.show()
+        self.close()

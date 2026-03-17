@@ -1,3 +1,4 @@
+
 from PyQt5.QtWidgets import QStackedWidget
 
 from menuWindow import MenuWindow
@@ -49,5 +50,11 @@ class Controller(QStackedWidget):
             lambda: self.setCurrentWidget(self.close)
         )
         self.register.goMenu.connect(
+            lambda: self.setCurrentWidget(self.menu)
+        )
+        self.deposit.goMenu.connect(
+            lambda: self.setCurrentWidget(self.menu)
+        )
+        self.withdraw.goMenu.connect(
             lambda: self.setCurrentWidget(self.menu)
         )

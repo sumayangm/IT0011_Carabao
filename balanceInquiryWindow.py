@@ -1,47 +1,106 @@
-#TO BE BUILT SOON
-
-from PyQt5.QtWidgets import QWidget, QLabel, QPushButton, QVBoxLayout
+from PyQt5.QtWidgets import QWidget, QLabel, QPushButton, QVBoxLayout, QMessageBox, QLineEdit
 from PyQt5.QtCore import Qt, pyqtSignal
+import pymysql.cursors
+from db import getConnection
 
-class BalanceInquiryWindow(QWidget):pass
-# balance_inquiry.py
+class BalanceInquiryWindow(QWidget):
+    goMenu = pyqtSignal()                          
 
-# Sample database of accounts (you can expand this)
-accounts = {
-    "1001": 5000.00,
-    "1002": 3200.50,
-    "1003": 10000.00
-}
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Balance Inquiry")
 
-def balance_inquiry():
-    print("\n===== BALANCE INQUIRY =====")
-    account_number = input("Enter your account number: ")
+        layout = QVBoxLayout()                     
+        layout.setSpacing(8)
+        layout.setContentsMargins(24, 24, 24, 24)
 
-    # Check if account exists
-    if account_number not in accounts:
-        print("\nAccount does NOT exist. Returning to main menu...\n")
-        return  # Goes back to caller (main menu)
-    
-    # If account exists, show balance
-    balance = accounts[account_number]
-    print(f"\nAccount Number: {account_number}")
-    print(f"Current Balance: ₱{balance:.2f}\n")
+        layout.addStretch()
 
-def main():
-    while True:
-        print("===== MAIN MENU =====")
-        print("[1] Balance Inquiry")
-        print("[2] Exit")
-        choice = input("Enter choice: ")
+        self.label = QLabel("Enter Account Number:")
+        self.label.setAlignment(Qt.AlignLeft)
+        layout.addWidget(self.label)
 
-        if choice == "1":
-            balance_inquiry()
-        elif choice == "2":
-            print("\nExiting program... Goodbye!\n")
-            break
-        else:
-            print("\nInvalid choice. Try again.\n")
+        self.account_input = QLineEdit()
+        self.account_input.setPlaceholderText("Account Number")
+        layout.addWidget(self.account_input)
 
+        self.pin_label = QLabel("Enter PIN:")
+        self.pin_label.setAlignment(Qt.AlignLeft)
+        layout.addWidget(self.pin_label)
 
-if __name__ == "__main__":
-    main()
+        self.pin_input = QLineEdit()
+        self.pin_input.setPlaceholderText("PIN")
+        self.pin_input.setEchoMode(QLineEdit.Password)
+        self.pin_input.setMaxLength(6)
+        layout.addWidget(self.pin_input)
+
+        self.check_button = QPushButton("Check Balance")
+        self.check_button.clicked.connect(self.verify_pin)
+        layout.addWidget(self.check_button)
+
+        self.back_button = QPushButton("Back")
+        self.back_button.setObjectName("btnBack")
+        self.back_button.clicked.connect(self.goMenu.emit)  
+        layout.addWidget(self.back_button)                  
+
+        layout.addStretch()
+
+        self.setLayout(layout)
+
+    def showEvent(self, event):
+        self.account_input.clear()
+        self.pin_input.clear()
+        super().showEvent(event)
+
+    def verify_pin(self):
+        account_number = self.account_input.text().strip()
+        pin = self.pin_input.text().strip()
+
+        if account_number == "":
+            QMessageBox.warning(self, "Missing Input", "Please enter an account number.")
+            return
+
+        if pin == "":
+            QMessageBox.warning(self, "Missing Input", "Please enter your PIN.")
+            return
+
+        if not pin.isdigit():
+            QMessageBox.warning(self, "Invalid PIN", "PIN must contain numbers only.")
+            return
+
+        try:
+            conn = getConnection()                 
+            cursor = conn.cursor(pymysql.cursors.DictCursor)
+
+            cursor.execute(
+                "SELECT balance FROM accounts WHERE account_number = %s AND pin = %s",
+                (account_number, pin)
+            )
+            result = cursor.fetchone()
+
+            if result is None:
+                QMessageBox.critical(
+                    self,
+                    "Access Denied",
+                    "Invalid account number or PIN.\nPlease try again."
+                )
+                self.pin_input.clear()
+                return
+
+            balance = float(result["balance"])
+
+            QMessageBox.information(
+                self,
+                "Balance Inquiry",
+                f"Account Number: {account_number}\nCurrent Balance: ₱{balance:,.2f}"
+            )
+
+            self.pin_input.clear()
+
+        except Exception as e:
+            QMessageBox.critical(self, "Database Error", str(e))
+        finally:
+            if 'cursor' in locals():
+                cursor.close()
+            if 'conn' in locals() and conn.open:   
+                conn.close()

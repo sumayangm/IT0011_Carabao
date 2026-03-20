@@ -72,3 +72,6 @@ class Controller(QStackedWidget):
         self.transactionHistory.goMenu.connect(
             lambda: self.setCurrentWidget(self.menu)
         )
+        self.balanceInq.goMenu.connect(
+        lambda: self.setCurrentWidget(self.menu)
+        )

@@ -27,12 +27,10 @@ class WithdrawWindow(QWidget):
         self.clrL()
 
         self.accn = QLabel('Enter Account Number: ')
-        self.accn.setStyleSheet("font-size: 15px; font-weight: bold")
         self.accn.setAlignment(Qt.AlignCenter)
         self.layout.addWidget(self.accn, alignment = Qt.AlignCenter)
 
         self.getAccn = QLineEdit()
-        self.getAccn.setStyleSheet("padding: 5px; border-style: solid; border-width: 1px; border-color: #73737B")
         self.layout.addWidget(self.getAccn)
 
         self.p_btn()
@@ -78,12 +76,10 @@ class WithdrawWindow(QWidget):
         self.sacur_bal = self.bal
 
         self.satitle = QLabel("SAVINGS ACCOUNT")
-        self.satitle.setStyleSheet("font-size: 20px; font-weight: bold; padding: 10px")
         self.satitle.setAlignment(Qt.AlignCenter)
         self.layout.addWidget(self.satitle, alignment = Qt.AlignCenter)
 
         self.saCB = QLabel(f'Current Balance:\nPhp {self.sacur_bal:.2f}')
-        self.saCB.setStyleSheet("font-size: 15px; font-weight: bold; padding: 10px")
         self.saCB.setAlignment(Qt.AlignCenter)
         self.layout.addWidget(self.saCB, alignment = Qt.AlignCenter)
         
@@ -95,12 +91,10 @@ class WithdrawWindow(QWidget):
         self.cacur_bal = self.bal
 
         self.catitle = QLabel("CURRENT ACCOUNT")
-        self.catitle.setStyleSheet("font-size: 20px; font-weight: bold; padding: 10px")
         self.catitle.setAlignment(Qt.AlignCenter)
         self.layout.addWidget(self.catitle, alignment = Qt.AlignCenter)
 
         self.caCB = QLabel(f'Current Balance:\nPhp {self.cacur_bal:.2f}')
-        self.caCB.setStyleSheet("font-size: 15px; font-weight: bold; padding: 10px")
         self.caCB.setAlignment(Qt.AlignCenter)
         self.layout.addWidget(self.caCB, alignment = Qt.AlignCenter)
 
@@ -114,7 +108,6 @@ class WithdrawWindow(QWidget):
         self.layout.addWidget(self.sEB, alignment = Qt.AlignCenter)
 
         self.sentBal = QLineEdit()
-        self.sentBal.setStyleSheet("padding: 5px; border-style: solid; border-width: 1px; border-color: #73737B")
         self.layout.addWidget(self.sentBal)
 
         self.sa_btncal()
@@ -128,7 +121,6 @@ class WithdrawWindow(QWidget):
         self.layout.addWidget(self.cEB, alignment = Qt.AlignCenter)
 
         self.centBal = QLineEdit()
-        self.centBal.setStyleSheet("padding: 5px; border-style: solid; border-width: 1px; border-color: #73737B")
         self.layout.addWidget(self.centBal)
 
         self.ca_btncal()
@@ -189,7 +181,6 @@ class WithdrawWindow(QWidget):
     def bck_btn(self):
         self.bckbtn = QPushButton(self)
         self.bckbtn.setText("BACK")
-        self.bckbtn.setStyleSheet("padding: 5px; font-size: 10px")
         self.bckbtn.clicked.connect(self.hbck)
         self.layout.addWidget(self.bckbtn)
 
@@ -197,7 +188,6 @@ class WithdrawWindow(QWidget):
     def p_btn(self):
         self.pbtn = QPushButton(self)
         self.pbtn.setText("ENTER")
-        self.pbtn.setStyleSheet("padding: 5px; font-size: 10px")
         self.pbtn.clicked.connect(self.check_accn)
         self.layout.addWidget(self.pbtn,)
 
@@ -205,7 +195,6 @@ class WithdrawWindow(QWidget):
     def sa_btncal(self):
         self.btn = QPushButton(self)
         self.btn.setText("WITHDRAW")
-        self.btn.setStyleSheet("padding: 5px; font-size: 10px")
         self.btn.clicked.connect(self.sval_msg)
         self.layout.addWidget(self.btn)
 
@@ -213,7 +202,6 @@ class WithdrawWindow(QWidget):
     def ca_btncal(self):
         self.btn = QPushButton(self)
         self.btn.setText("WITHDRAW")
-        self.btn.setStyleSheet("padding: 5px; font-size: 10px")
         self.btn.clicked.connect(self.cval_msg)
         self.layout.addWidget(self.btn)
     #--END OF BUTTONS

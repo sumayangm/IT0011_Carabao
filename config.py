@@ -1,7 +1,7 @@
 import os
 
 basePath = os.path.dirname(os.path.abspath(__file__))
-iconPath = os.path.join(basePath, "users.ico")
+iconPath = os.path.join(basePath, "icon.png")
 
 DB_HOST = "localhost"
 DB_USER = "root"

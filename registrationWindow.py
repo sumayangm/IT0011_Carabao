@@ -18,7 +18,7 @@ class RegistrationWindow(QWidget):
         layout.addWidget(self.firstNameLabel, alignment = Qt.AlignLeft)
         layout.addWidget(self.firstNameInput, alignment = Qt.AlignLeft)
 
-        self.middleNameLabel = QLabel("Middle Name: ")
+        self.middleNameLabel = QLabel("Middle Name (N/A for None): ")
         self.middleNameInput = QLineEdit()
         layout.addWidget(self.middleNameLabel, alignment = Qt.AlignLeft)
         layout.addWidget(self.middleNameInput, alignment = Qt.AlignLeft)
@@ -31,7 +31,7 @@ class RegistrationWindow(QWidget):
         self.addressNameLabel = QLabel("Address: ")
         self.addressNameInput = QLineEdit()
         layout.addWidget(self.addressNameLabel, alignment = Qt.AlignLeft)
-        layout.addWidget(self.addressNameInput, alignment = Qt.AlignLeft)
+        layout.addWidget(self.addressNameInput)
 
         self.birthdayLabel = QLabel("Birthday: ")
         self.birthdayInput = QDateEdit()
@@ -101,11 +101,13 @@ class RegistrationWindow(QWidget):
             if accountType == "Current Account" and initialDeposit < 10000:
                 raise RegistrationError("Minimum deposit for Current Account is P10,000")
 
+            accNumber = str(random.randint(1000000000, 9999999999))
+                
             cursor = conn.cursor()
             cursor.execute("""
                 INSERT INTO accounts VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """, (
-                str(random.randint(1000000000, 9999999999)),
+                accNumber,
                 self.firstNameInput.text().strip(),
                 self.middleNameInput.text().strip(),
                 self.lastNameInput.text().strip(),
@@ -118,7 +120,7 @@ class RegistrationWindow(QWidget):
             ))
             conn.commit()
 
-            QMessageBox.information(self, "Success", "Registration Complete!")
+            QMessageBox.information(self, "Registration Complete", f"Account successfully created!\n\nYour Account Number is:\n{accNumber}\n\nPlease keep this safe.")
 
             self.firstNameInput.clear()
             self.pinInput.clear()

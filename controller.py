@@ -58,3 +58,9 @@ class Controller(QStackedWidget):
         self.withdraw.goMenu.connect(
             lambda: self.setCurrentWidget(self.menu)
         )
+        self.accInfo.goMenu.connect(
+        lambda: self.setCurrentWidget(self.menu)
+        )
+        self.close.goMenu.connect(
+            lambda: self.setCurrentWidget(self.menu)
+        )

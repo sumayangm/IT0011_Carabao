@@ -22,6 +22,16 @@ class TransactionHistoryWindow(QWidget):
         self.acc_input.setPlaceholderText("Enter Account Number")
         layout.addWidget(self.acc_input)
 
+        pin_label = QLabel("Enter PIN:")
+        pin_label.setAlignment(Qt.AlignLeft)
+        layout.addWidget(pin_label)
+
+        self.pin_input = QLineEdit()
+        self.pin_input.setPlaceholderText("PIN")
+        self.pin_input.setEchoMode(QLineEdit.Password)
+        self.pin_input.setMaxLength(6)
+        layout.addWidget(self.pin_input)
+
         view_btn = QPushButton("View History")
         view_btn.clicked.connect(self.load_history)
         layout.addWidget(view_btn)
@@ -41,22 +51,43 @@ class TransactionHistoryWindow(QWidget):
 
         self.setLayout(layout)
 
+    def showEvent(self, event):
+        self.acc_input.clear()
+        self.pin_input.clear()
+        self.table.setRowCount(0)
+        super().showEvent(event)
+
     def load_history(self):
         acc_no = self.acc_input.text().strip()
+        pin = self.pin_input.text().strip()
+
         if not acc_no:
             QMessageBox.warning(self, "Input Error", "Please enter an account number.")
+            return
+
+        if not pin:
+            QMessageBox.warning(self, "Input Error", "Please enter your PIN.")
+            return
+
+        if not pin.isdigit():
+            QMessageBox.warning(self, "Invalid PIN", "PIN must contain numbers only.")
             return
 
         try:
             conn = getConnection()
             cursor = conn.cursor(pymysql.cursors.DictCursor)
 
-            # verify account exists
             cursor.execute(
-                "SELECT account_number FROM accounts WHERE account_number = %s", (acc_no,)
+                "SELECT account_number FROM accounts WHERE account_number = %s AND pin = %s",
+                (acc_no, pin)
             )
             if not cursor.fetchone():
-                QMessageBox.warning(self, "Error", "Account not found. Please create a new one first.")
+                QMessageBox.critical(
+                    self,
+                    "Access Denied",
+                    "Invalid account number or PIN.\nPlease try again."
+                )
+                self.pin_input.clear()
                 return
 
             cursor.execute(
@@ -80,8 +111,7 @@ class TransactionHistoryWindow(QWidget):
                 self.table.setItem(rowPos, 2, QTableWidgetItem(f"₱{row['amount']:,.2f}"))
                 self.table.setItem(rowPos, 3, QTableWidgetItem(f"₱{row['new_balance']:,.2f}"))
 
-                # color code deposit vs withdraw
-                color = "#0a1a0f" if row['transaction_type'] == "Deposit" else "#1a0a0a"
+                color = "#0D2318" if row['transaction_type'] == "Deposit" else "#2A1010"
                 for col in range(4):
                     self.table.item(rowPos, col).setBackground(
                         __import__('PyQt5.QtGui', fromlist=['QColor']).QColor(color)

@@ -123,8 +123,14 @@ class RegistrationWindow(QWidget):
             QMessageBox.information(self, "Registration Complete", f"Account successfully created!\n\nYour Account Number is:\n{accNumber}\n\nPlease keep this safe.")
 
             self.firstNameInput.clear()
-            self.pinInput.clear()
+            self.middleNameInput.clear()
+            self.lastNameInput.clear()
+            self.addressNameInput.clear()
+            self.birthdayInput.setDate(QDate.currentDate())
+            self.genderInput.setCurrentIndex(0)
+            self.accountTypeInput.setCurrentIndex(0)
             self.initialDepositInput.clear()
+            self.pinInput.clear()
 
             self.goMenu.emit()
 

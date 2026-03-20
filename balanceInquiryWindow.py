@@ -1,88 +1,93 @@
-#TO BE BUILT SOON
-
-from PyQt5.QtWidgets import QWidget, QLabel, QPushButton, QVBoxLayout,
-QMessageBox
+from PyQt5.QtWidgets import QWidget, QLabel, QPushButton, QVBoxLayout, QMessageBox, QLineEdit
 from PyQt5.QtCore import Qt, pyqtSignal
-import mysql.connector
-from mysql.connector import Error
-from config import dbconfig
-class BalanceInquiryWindow(QWidget):pass
+import pymysql.cursors
+from db import getConnection
 
- 
-class balanceInquiryWindow(QWidget):
+class BalanceInquiryWindow(QWidget):
+    goMenu = pyqtSignal()                          
+
     def __init__(self):
         super().__init__()
+        self.setWindowTitle("Balance Inquiry")
 
-        self.setWindowTitle("Balance Inquiry - IT001_Carabao Bank")
-        self.setFixedSize(350, 200)
+        layout = QVBoxLayout()                     
+        layout.setSpacing(8)
+        layout.setContentsMargins(24, 24, 24, 24)
 
-        # UI Elements
+        layout.addStretch()
+
         self.label = QLabel("Enter Account Number:")
-        self.label.setAlignment(Qt.AlignCenter)
+        self.label.setAlignment(Qt.AlignLeft)
+        layout.addWidget(self.label)
 
         self.account_input = QLineEdit()
         self.account_input.setPlaceholderText("Account Number")
+        layout.addWidget(self.account_input)
+
+        self.pin_label = QLabel("Enter PIN:")
+        self.pin_label.setAlignment(Qt.AlignLeft)
+        layout.addWidget(self.pin_label)
+
+        self.pin_input = QLineEdit()
+        self.pin_input.setPlaceholderText("PIN")
+        self.pin_input.setEchoMode(QLineEdit.Password)
+        self.pin_input.setMaxLength(6)
+        layout.addWidget(self.pin_input)
 
         self.check_button = QPushButton("Check Balance")
-        self.check_button.clicked.connect(self.check_balance)
-
-        # Layout
-        layout = QVBoxLayout()
-        layout.addWidget(self.label)
-        layout.addWidget(self.account_input)
+        self.check_button.clicked.connect(self.verify_pin)
         layout.addWidget(self.check_button)
+
+        self.back_button = QPushButton("Back")
+        self.back_button.setObjectName("btnBack")
+        self.back_button.clicked.connect(self.goMenu.emit)  
+        layout.addWidget(self.back_button)                  
+
+        layout.addStretch()
 
         self.setLayout(layout)
 
+    def showEvent(self, event):
+        self.account_input.clear()
+        self.pin_input.clear()
+        super().showEvent(event)
 
-    # ------------------------------------------
-    # MYSQL CONNECTION (uses your config.py)
-    # ------------------------------------------
-    def connect_db(self):
-        try:
-            conn = mysql.connector.connect(
-                host=dbconfig["host"],
-                user=dbconfig["user"],
-                password=dbconfig["password"],
-                database=dbconfig["database"]
-            )
-            return conn
-        except Error as e:
-            QMessageBox.critical(self, "Database Error", str(e))
-            return None
-
-
-    # ------------------------------------------
-    # BALANCE INQUIRY LOGIC
-    # ------------------------------------------
-    def check_balance(self):
+    def verify_pin(self):
         account_number = self.account_input.text().strip()
+        pin = self.pin_input.text().strip()
 
         if account_number == "":
             QMessageBox.warning(self, "Missing Input", "Please enter an account number.")
             return
 
-        conn = self.connect_db()
-        if conn is None:
+        if pin == "":
+            QMessageBox.warning(self, "Missing Input", "Please enter your PIN.")
+            return
+
+        if not pin.isdigit():
+            QMessageBox.warning(self, "Invalid PIN", "PIN must contain numbers only.")
             return
 
         try:
-            cursor = conn.cursor(dictionary=True)
+            conn = getConnection()                 
+            cursor = conn.cursor(pymysql.cursors.DictCursor)
 
-            query = """
-                SELECT current_balance 
-                FROM accounts 
-                WHERE account_number = %s
-            """
-
-            cursor.execute(query, (account_number,))
+            cursor.execute(
+                "SELECT balance FROM accounts WHERE account_number = %s AND pin = %s",
+                (account_number, pin)
+            )
             result = cursor.fetchone()
 
             if result is None:
-                QMessageBox.critical(self, "Not Found", "Account does not exist.")
+                QMessageBox.critical(
+                    self,
+                    "Access Denied",
+                    "Invalid account number or PIN.\nPlease try again."
+                )
+                self.pin_input.clear()
                 return
 
-            balance = float(result["current_balance"])
+            balance = float(result["balance"])
 
             QMessageBox.information(
                 self,
@@ -90,7 +95,12 @@ class balanceInquiryWindow(QWidget):
                 f"Account Number: {account_number}\nCurrent Balance: ₱{balance:,.2f}"
             )
 
-        except Error as e:
+            self.pin_input.clear()
+
+        except Exception as e:
             QMessageBox.critical(self, "Database Error", str(e))
         finally:
-            conn.close()
+            if 'cursor' in locals():
+                cursor.close()
+            if 'conn' in locals() and conn.open:   
+                conn.close()

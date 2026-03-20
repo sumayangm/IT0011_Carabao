@@ -8,7 +8,7 @@ from depositWindow import DepositWindow
 from withdrawWindow import WithdrawWindow
 from accountInfoWindow import AccountInfoWindow
 from closeAccWindow import CloseAccWindow
-
+from transactionHistoryWindow import TransactionHistoryWindow
 class Controller(QStackedWidget):
     def __init__(self):
         super().__init__()
@@ -19,13 +19,15 @@ class Controller(QStackedWidget):
         self.withdraw = WithdrawWindow()
         self.accInfo = AccountInfoWindow()
         self.close = CloseAccWindow()
-        
+        self.transactionHistory = TransactionHistoryWindow()
+
         self.addWidget(self.menu)
         self.addWidget(self.register)
         self.addWidget(self.balanceInq)
         self.addWidget(self.deposit)
         self.addWidget(self.withdraw)
         self.addWidget(self.accInfo)
+        self.addWidget(self.transactionHistory)
         self.addWidget(self.close)
 
         self.menu.goMenu.connect(
@@ -56,5 +58,17 @@ class Controller(QStackedWidget):
             lambda: self.setCurrentWidget(self.menu)
         )
         self.withdraw.goMenu.connect(
+            lambda: self.setCurrentWidget(self.menu)
+        )
+        self.accInfo.goMenu.connect(
+        lambda: self.setCurrentWidget(self.menu)
+        )
+        self.close.goMenu.connect(
+            lambda: self.setCurrentWidget(self.menu)
+        )
+        self.menu.goTransactionHistory.connect(
+        lambda: self.setCurrentWidget(self.transactionHistory)
+        )
+        self.transactionHistory.goMenu.connect(
             lambda: self.setCurrentWidget(self.menu)
         )

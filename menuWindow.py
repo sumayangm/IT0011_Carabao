@@ -9,6 +9,7 @@ class MenuWindow(QWidget):
     goWithdraw = pyqtSignal()
     goAccInfo = pyqtSignal()
     goClose = pyqtSignal()
+    goTransactionHistory = pyqtSignal()
     goExit = pyqtSignal()
 
     def __init__(self):
@@ -42,6 +43,10 @@ class MenuWindow(QWidget):
         self.btnClose = QPushButton("Close Account")
         self.btnClose.clicked.connect(self.goClose.emit)
         layout.addWidget(self.btnClose)
+
+        self.btnTransactionHistory = QPushButton("View Transaction History")
+        self.btnTransactionHistory.clicked.connect(self.goTransactionHistory.emit)
+        layout.addWidget(self.btnTransactionHistory)
 
         self.btnExit = QPushButton("Exit Program")
         self.btnExit.clicked.connect(self.goExit.emit)

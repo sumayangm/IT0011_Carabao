@@ -1,14 +1,14 @@
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel, QLineEdit, QPushButton, QTextEdit, QMessageBox
 from PyQt5.QtCore import Qt, pyqtSignal
+import pymysql.cursors
 from db import getConnection  
 
 
 class AccountInfoWindow(QWidget):
     goMenu = pyqtSignal() 
 
-    def __init__(self, menu_window=None):  
+    def __init__(self):  
         super().__init__()
-        self.menu_window = menu_window
         self.setWindowTitle("View Account Information")
         self.setGeometry(500, 250, 400, 420)
         
@@ -29,62 +29,44 @@ class AccountInfoWindow(QWidget):
         self.result.setReadOnly(True)
         layout.addWidget(self.result)
         
-        back_btn = QPushButton("Go Back")
-        back_btn.clicked.connect(self.go_back)
+        back_btn = QPushButton("Back")
+        back_btn.clicked.connect(self.goMenu.emit)
         layout.addWidget(back_btn)
 
         self.setLayout(layout)
 
     def view_account(self):
         acc_no = self.acc_input.text().strip()
-        
         if not acc_no:
-            QMessageBox.warning(self, "Input Error", "Please enter an account number")
+            QMessageBox.warning(self, "Input Error", "Please enter an account number.")
             return
 
-        conn = None
-        cursor = None
-        
         try:
-            conn = getConnection()  
-            if not conn:
-                QMessageBox.critical(self, "Database Error", "Could not connect to database")
-                return
-                
-            cursor = conn.cursor(dictionary=True)
-
+            conn = getConnection()
+            cursor = conn.cursor(pymysql.cursors.DictCursor)  # pymysql dict cursor
             cursor.execute(
-                "SELECT * FROM accounts WHERE account_number=%s",
-                (acc_no,)
+                "SELECT * FROM accounts WHERE account_number = %s", (acc_no,)
             )
-
             account = cursor.fetchone()
 
             if not account:
-                QMessageBox.warning(self, "Error", "Account not found")
+                QMessageBox.warning(self, "Error", "Account not found. Please create a new one first.")
                 return
 
-            info = f"""
-Full Name: {account['first_name']} {account.get('middle_name', '')} {account['last_name']}
-Address: {account['address']}
-Birthday: {account['birthday']}
-Gender: {account['gender']}
-Account Type: {account['account_type']}
-Current Balance: {account['balance']}
-"""
+            info = (
+                f"Full Name:     {account['first_name']} {account['middle_name']} {account['last_name']}\n"
+                f"Address:       {account['address']}\n"
+                f"Birthday:      {account['birthday']}\n"
+                f"Gender:        {account['gender']}\n"
+                f"Account Type:  {account['account_type']}\n"
+                f"Balance:       ₱{account['balance']:,.2f}"
+            )
             self.result.setText(info)
 
         except Exception as e:
             QMessageBox.critical(self, "Database Error", str(e))
         finally:
-            if cursor:
+            if 'cursor' in locals():
                 cursor.close()
-            if conn:
+            if 'conn' in locals() and conn.open:
                 conn.close()
-
-    def go_back(self):
-        if self.menu_window:
-            self.menu_window.show()
-            self.close()
-        else:
-            self.goMenu.emit() 

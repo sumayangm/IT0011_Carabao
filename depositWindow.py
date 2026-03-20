@@ -27,12 +27,10 @@ class DepositWindow(QWidget):
         self.clrL()
 
         self.accn = QLabel('Enter Account Number: ')
-        self.accn.setStyleSheet("font-size: 15px; font-weight: bold")
         self.accn.setAlignment(Qt.AlignCenter)
         self.layout.addWidget(self.accn, alignment = Qt.AlignCenter)
 
         self.getAccn = QLineEdit()
-        self.getAccn.setStyleSheet("padding: 5px; border-style: solid; border-width: 1px; border-color: #73737B")
         self.layout.addWidget(self.getAccn)
 
         self.p_btn()
@@ -51,16 +49,62 @@ class DepositWindow(QWidget):
     def asql(self):
         conn = getConnection()
         cur = conn.cursor()
-        cur.execute("SELECT balance, account_type FROM accounts WHERE account_number = %s", (self.Anum,))
+        cur.execute(
+            "SELECT balance, account_type FROM accounts WHERE account_number = %s", (self.Anum,)
+        )
         result = cur.fetchone()
         if result is None:
             QMessageBox.critical(self, "ERROR", "Account number not found")
-        else: 
+        else:
             self.bal = result[0]
             self.acct = result[1]
+            cur.close()
+            conn.close()
+
+            if not self.verify_pin():    # PIN check before proceeding
+                return
+
             self.anumchkd()
-        cur.close()
-        conn.close()
+        
+        if 'cur' in locals():
+            cur.close()
+        if 'conn' in locals() and conn.open:
+            conn.close()
+
+    def verify_pin(self):
+        try:
+            conn = getConnection()
+            cur = conn.cursor()
+            cur.execute(
+                "SELECT pin FROM accounts WHERE account_number = %s", (self.Anum,)
+            )
+            result = cur.fetchone()
+            stored_pin = result[0] if result else None
+        except Exception as e:
+            QMessageBox.critical(self, "Database Error", str(e))
+            return False
+        finally:
+            if 'cur' in locals():
+                cur.close()
+            if 'conn' in locals() and conn.open:
+                conn.close()
+
+        from PyQt5.QtWidgets import QInputDialog
+        pin, ok = QInputDialog.getText(
+            self, "PIN Verification",
+            "Enter your PIN:",
+            QLineEdit.Password
+        )
+
+        if not ok or pin.strip() == "":
+            QMessageBox.warning(self, "Cancelled", "Transaction cancelled.")
+            return False
+
+        if pin.strip() != stored_pin:
+            QMessageBox.critical(self, "Invalid PIN", "Incorrect PIN. Transaction cancelled.")
+            return False
+
+        return True
 
     def upd_bal(self, updBal):
         conn = getConnection()
@@ -72,18 +116,34 @@ class DepositWindow(QWidget):
         conn.close()
     #--END OF SQL
 
+    def log_transaction(self, transaction_type, amount, new_balance):
+        try:
+            conn = getConnection()
+            cur = conn.cursor()
+            cur.execute(
+                "INSERT INTO transactions (account_number, transaction_type, amount, new_balance) "
+                "VALUES (%s, %s, %s, %s)",
+                (self.Anum, transaction_type, amount, new_balance)
+            )
+            conn.commit()
+        except Exception as e:
+            pass  # logging failure should not block the transaction
+        finally:
+            if 'cur' in locals():
+                cur.close()
+            if 'conn' in locals() and conn.open:
+                conn.close()
+                
     #SAVINGS ACCOUNT
     def sa(self):
         self.clrL()
         self.sacur_bal = self.bal
 
         self.satitle = QLabel("SAVINGS ACCOUNT")
-        self.satitle.setStyleSheet("font-size: 20px; font-weight: bold; padding: 10px")
         self.satitle.setAlignment(Qt.AlignCenter)
         self.layout.addWidget(self.satitle, alignment = Qt.AlignCenter)
 
         self.saCB = QLabel(f'Current Balance:\nPhp {self.sacur_bal:.2f}')
-        self.saCB.setStyleSheet("font-size: 15px; font-weight: bold; padding: 10px")
         self.saCB.setAlignment(Qt.AlignCenter)
         self.layout.addWidget(self.saCB, alignment = Qt.AlignCenter)
         
@@ -95,12 +155,10 @@ class DepositWindow(QWidget):
         self.cacur_bal = self.bal
 
         self.catitle = QLabel("CURRENT ACCOUNT")
-        self.catitle.setStyleSheet("font-size: 20px; font-weight: bold; padding: 10px")
         self.catitle.setAlignment(Qt.AlignCenter)
         self.layout.addWidget(self.catitle, alignment = Qt.AlignCenter)
 
         self.caCB = QLabel(f'Current Balance:\nPhp {self.cacur_bal:.2f}')
-        self.caCB.setStyleSheet("font-size: 15px; font-weight: bold; padding: 10px")
         self.caCB.setAlignment(Qt.AlignCenter)
         self.layout.addWidget(self.caCB, alignment = Qt.AlignCenter)
 
@@ -109,12 +167,10 @@ class DepositWindow(QWidget):
     #SA: enter amount function
     def sa_enter_bal(self):
         self.sEB = QLabel('Enter Amount: ')
-        self.sEB.setStyleSheet("font-size: 15px")
         self.sEB.setAlignment(Qt.AlignCenter)
         self.layout.addWidget(self.sEB, alignment = Qt.AlignCenter)
 
         self.sentBal = QLineEdit()
-        self.sentBal.setStyleSheet("padding: 5px; border-style: solid; border-width: 1px; border-color: #73737B")
         self.layout.addWidget(self.sentBal)
 
         self.sa_btncal()
@@ -128,7 +184,6 @@ class DepositWindow(QWidget):
         self.layout.addWidget(self.cEB, alignment = Qt.AlignCenter)
 
         self.centBal = QLineEdit()
-        self.centBal.setStyleSheet("padding: 5px; border-style: solid; border-width: 1px; border-color: #73737B")
         self.layout.addWidget(self.centBal)
 
         self.ca_btncal()
@@ -172,6 +227,7 @@ class DepositWindow(QWidget):
         if amt is not None:
             new_bal = self.sacur_bal + amt
             self.upd_bal(new_bal)
+            self.log_transaction("Deposit", amt, new_bal)
             self.end_msg()
     
     def ca_calcDeposit(self):
@@ -179,6 +235,7 @@ class DepositWindow(QWidget):
         if amt is not None:
             new_bal = self.cacur_bal + amt
             self.upd_bal(new_bal)
+            self.log_transaction("Deposit", amt, new_bal)
             self.end_msg()
         
     #--BUTTONS
@@ -189,7 +246,6 @@ class DepositWindow(QWidget):
     def bck_btn(self):
         self.bckbtn = QPushButton(self)
         self.bckbtn.setText("BACK")
-        self.bckbtn.setStyleSheet("padding: 5px; font-size: 10px")
         self.bckbtn.clicked.connect(self.hbck)
         self.layout.addWidget(self.bckbtn)
 
@@ -197,7 +253,6 @@ class DepositWindow(QWidget):
     def p_btn(self):
         self.pbtn = QPushButton(self)
         self.pbtn.setText("ENTER")
-        self.pbtn.setStyleSheet("padding: 5px; font-size: 10px")
         self.pbtn.clicked.connect(self.check_accn)
         self.layout.addWidget(self.pbtn,)
 
@@ -205,7 +260,6 @@ class DepositWindow(QWidget):
     def sa_btncal(self):
         self.btn = QPushButton(self)
         self.btn.setText("DEPOSIT")
-        self.btn.setStyleSheet("padding: 5px; font-size: 10px")
         self.btn.clicked.connect(self.sval_msg)
         self.layout.addWidget(self.btn)
 
@@ -213,7 +267,6 @@ class DepositWindow(QWidget):
     def ca_btncal(self):
         self.btn = QPushButton(self)
         self.btn.setText("DEPOSIT")
-        self.btn.setStyleSheet("padding: 5px; font-size: 10px")
         self.btn.clicked.connect(self.cval_msg)
         self.layout.addWidget(self.btn)
     #--END OF BUTTONS

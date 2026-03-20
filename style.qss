@@ -323,3 +323,14 @@ QToolTip {
     padding: 4px 8px;
     font-size: 12px;
 }
+
+QTableCornerButton::section {
+    background-color: #161B22;
+    border: none;
+}
+
+QTableWidget QHeaderView::section {
+    color: #E6EDF3;
+    background-color: #21262D;
+    border-bottom: 2px solid #2EA96A;
+}
